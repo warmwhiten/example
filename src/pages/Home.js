@@ -6,6 +6,9 @@ import {POST} from '../utils/axios'
 import Card from '../components/Card'
 import styled from '@emotion/styled'
 import Button from '@mui/material/Button';
+import Modal from '@mui/material/Modal';
+import TextField from '@mui/material/TextField';
+import Box from '@mui/material/Box';
 
 const CardWrapper = styled.div`
   width: 100%;
@@ -29,6 +32,15 @@ const Container = styled.div`
     top: 10px;
     right: 10px;
   }
+`
+
+const Content = styled.div`
+margin: 5px 0;
+`
+
+const Confirm = styled.div`
+
+  margin: 15px 0 0 325px;
 `
 
 const TEST_DATA = {
@@ -64,15 +76,69 @@ const TEST_DATA = {
   }
 }
 
-
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 500,
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+};
 
 export default function Home() {
   const [data, setData] = useState({});
+  const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const CardContainer = () => {
     return (<CardWrapper>
     {data?.params?.specs.map((item)=>{return(<Card id={item.spec_id} name={item.name} description={item.description}/>)})}
     </CardWrapper>)
   }
+
+  const handleClickCreate = () => {
+    if(isOpen==false) {
+      setIsOpen(true);
+    }
+  }
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setName('');
+    setDescription('');
+  }
+
+  const handleClickSubmit = async()=> {
+    if(window.confirm('제출하시겠습니까?')){
+      try{
+        const data = {
+          name: name,
+          description: description
+        }
+        //TODO: API 연동 테스트
+        await POST('/specs', data);
+        alert('완료되었습니다.');
+        setIsOpen(false);
+        window.location.reload();
+      }
+      catch(error){
+        alert('오류발생', error);
+      }
+    }
+  }
+
+  const handleChangeName = (e) => {
+    setName(e.target.value);
+    
+  }
+
+  const handleChangeDescription = (e) => {
+    setDescription(e.target.value);
+  }
+
   useEffect(()=>{
     // TODO : API 연동
     /*
@@ -94,13 +160,30 @@ export default function Home() {
       <CssBaseline />
       <Container >
         <div className='btnContainer'>
-          <Button variant="outlined" size="large">생성하기</Button>
+          <Button variant="outlined" size="large" onClick={handleClickCreate}>생성하기</Button>
         </div>
         <CardContainer/>
-        
-            
-
       </Container>
+      <Modal
+        open={isOpen}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+
+          <Content>
+          <TextField id="name" variant="outlined" label="제목" value={name} onChange={handleChangeName}/>
+          </Content>
+          <Content >
+          <TextField id="description" variant="outlined" label="설명" rows={5} value={description} fullWidth multiline onChange={handleChangeDescription}/>
+          </Content>
+          <Confirm >
+          <Button variant="outlined" size="large" onClick={handleClickSubmit}>제출하기</Button>
+          </Confirm>
+
+        </Box>
+      </Modal>
     </React.Fragment>
   );
 }
